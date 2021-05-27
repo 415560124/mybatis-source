@@ -23,7 +23,6 @@
   <artifactId>mybatis-parent</artifactId>
   <version>32-rhy</version>
   <packaging>pom</packaging>
-
   <name>mybatis-parent</name>
   <description>The MyBatis parent POM.</description>
   <url>https://www.mybatis.org/</url>
