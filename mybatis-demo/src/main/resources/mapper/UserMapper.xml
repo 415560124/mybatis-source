@@ -11,7 +11,7 @@
     </resultMap>
 
 
-    <select id="selectById"  resultMap="result">
+    <select id="selectById"  resultMap="result" ><!-- databaseId="" -->
         select id,user_name,create_time from t_user where id=${param1}
         <where>
             <if test="param1>0">

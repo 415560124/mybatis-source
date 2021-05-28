@@ -92,31 +92,113 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   public Configuration parse() {
+    //如果已经解析过了，则抛出异常
     if (parsed) {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
     }
+    //设置解析过标志位为True
     parsed = true;
+    //解析mybatis-config.xml的<configuration>节点
     parseConfiguration(parser.evalNode("/configuration"));
     return configuration;
   }
 
   private void parseConfiguration(XNode root) {
     try {
-      // issue #117 read properties first
+      /**
+       * 解析 properties 节点
+       * <properties resource="db.properties">
+       *   <property name="test" value="123"/>
+       * </properties>
+       * 解析到{@link Configuration#variables}
+       */
       propertiesElement(root.evalNode("properties"));
+      /**
+       * 解析 settings 节点
+       *
+       * <settings>
+       *   <setting name="cacheEnabled" value="true"/>
+       *   <setting name="lazyLoadingEnabled" value="true"/>
+       *   ...
+       * </settings>
+       */
       Properties settings = settingsAsProperties(root.evalNode("settings"));
+      /**
+       * 解析settings的vfs配置
+       * VFS含义是虚拟文件系统；主要是通过程序能够方便读取本地文件系统、FTP文件系统等系统中的文件资源。
+       * Mybatis中提供了VFS这个配置，主要是通过该配置可以加载自定义的虚拟文件系统应用程序
+       * 解析到{@link Configuration#vfsImpl}
+       */
       loadCustomVfs(settings);
+      /**
+       * 解析settings的日志实现
+       * 解析到{@link Configuration#logImpl}
+       */
       loadCustomLogImpl(settings);
+      /**
+       * 解析 typeAliases别名 节点
+       * <typeAliases>
+       *   <typeAlias alias="Author" type="cn.tulingxueyuan.pojo.Author"/>
+       * </typeAliases>
+       * 解析到{@link Configuration#typeAliasRegistry.typeAlias}
+       */
       typeAliasesElement(root.evalNode("typeAliases"));
+      /**
+       * 解析 plugins插件(比如分页插件) 节点
+       * 解析到{@link Configuration#interceptorChain.interceptors}
+       */
       pluginElement(root.evalNode("plugins"));
       objectFactoryElement(root.evalNode("objectFactory"));
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
+      /**
+       * 设置settings和默认值
+       */
       settingsElement(settings);
-      // read it after objectFactory and objectWrapperFactory issue #631
+      /**
+       * 解析 environments mybatis环境 节点
+       * <environments default="dev">
+       *   <environment id="dev">
+       *     <transactionManager type="JDBC"/>
+       *     <dataSource type="POOLED">
+       *       <property name="driver" value="${jdbc.driver}"/>
+       *       <property name="url" value="${jdbc.url}"/>
+       *       <property name="username" value="root"/>
+       *       <property name="password" value="Zw726515"/>
+       *     </dataSource>
+       *    </environment>
+       * </environments>
+       * 解析到{@link Configuration#environment}
+       * 在继承spring的时候由 spring-mybatis提供数据源和事务工厂
+       */
       environmentsElement(root.evalNode("environments"));
+      /**
+       * 解析 databaseIdProvider数据库厂商 节点
+       *     <databaseIdProvider type="DB_VENDOR">
+       *       <property name="SQL Server" value="sqlserver"/>
+       *       <property name="DB2" value="db2"/>
+       *       <property name="Oracle" value="oracle" />
+       *       <property name="MySql" value="mysql" />
+       *     </databaseIdProvider>
+       * 解析到{@link Configuration#databaseId}
+       */
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
+      /**
+       * 解析 typeHandlers类型处理器 节点
+       * <typeHandlers>
+       *   <typeHandler handler="org.mybatis.example.ExampleTypeHandler"/>
+       * </typeHandlers>
+       * 解析到{@link Configuration#typeHandlerRegistry.typeHandlerMap}
+       */
       typeHandlerElement(root.evalNode("typeHandlers"));
+      /**
+       * 解析 mapper映射 节点
+       * 配置方式：
+       * ① package ： 包路径
+       * ② resource ： classpath路径下资源地址
+       * ③ url ：磁盘或者网络资源
+       * ④ class ：mapper文件Class类
+       */
       mapperElement(root.evalNode("mappers"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
@@ -124,13 +206,16 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private Properties settingsAsProperties(XNode context) {
+    //如果settings节点为null，直接返回空
     if (context == null) {
       return new Properties();
     }
+    //获得子节点
     Properties props = context.getChildrenAsProperties();
     // Check that all settings are known to the configuration class
     MetaClass metaConfig = MetaClass.forClass(Configuration.class, localReflectorFactory);
     for (Object key : props.keySet()) {
+      //解析出来的配置不存在于配置项中，则抛出异常
       if (!metaConfig.hasSetter(String.valueOf(key))) {
         throw new BuilderException("The setting " + key + " is not known.  Make sure you spelled it correctly (case sensitive).");
       }
@@ -159,15 +244,22 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   private void typeAliasesElement(XNode parent) {
     if (parent != null) {
+      //获得所有的子节点
       for (XNode child : parent.getChildren()) {
+        //包路径配置
         if ("package".equals(child.getName())) {
           String typeAliasPackage = child.getStringAttribute("name");
           configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
         } else {
+          //别名
           String alias = child.getStringAttribute("alias");
+          //数据类型
           String type = child.getStringAttribute("type");
           try {
             Class<?> clazz = Resources.classForName(type);
+            /**
+             * 注册到{@link org.apache.ibatis.type.TypeAliasRegistry#typeAliases}中
+             */
             if (alias == null) {
               typeAliasRegistry.registerAlias(clazz);
             } else {
@@ -183,11 +275,16 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   private void pluginElement(XNode parent) throws Exception {
     if (parent != null) {
+      //获得子节点
       for (XNode child : parent.getChildren()) {
+        //获得拦截器属性（拦截器类全限定名 com.rhy.xxx）
         String interceptor = child.getStringAttribute("interceptor");
         Properties properties = child.getChildrenAsProperties();
         Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).getDeclaredConstructor().newInstance();
         interceptorInstance.setProperties(properties);
+        /**
+         * 添加到{@link Configuration#interceptorChain}中
+         */
         configuration.addInterceptor(interceptorInstance);
       }
     }
@@ -221,22 +318,31 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   private void propertiesElement(XNode context) throws Exception {
     if (context != null) {
+      //将children节点解析成Properties对象
       Properties defaults = context.getChildrenAsProperties();
+      //获得节点上的resource属性
       String resource = context.getStringAttribute("resource");
+      //获得节点上的url属性
       String url = context.getStringAttribute("url");
+      //如果两个属性都不为null则抛出异常，只能选择其中之一
       if (resource != null && url != null) {
         throw new BuilderException("The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.");
       }
       if (resource != null) {
+        //读取资源文件为Properties，并且合并
         defaults.putAll(Resources.getResourceAsProperties(resource));
       } else if (url != null) {
+        //读取资源文件为Properties，并且合并
         defaults.putAll(Resources.getUrlAsProperties(url));
       }
+      //和已经存在的属性合并
       Properties vars = configuration.getVariables();
       if (vars != null) {
         defaults.putAll(vars);
       }
+      //设置到XPathParser对象中
       parser.setVariables(defaults);
+      //设置到Configuration对象中
       configuration.setVariables(defaults);
     }
   }
@@ -363,7 +469,11 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   private void mapperElement(XNode parent) throws Exception {
     if (parent != null) {
+      /**
+       * 获取所有子节点
+       */
       for (XNode child : parent.getChildren()) {
+        //节点为<package name="com.rhy.mapper"></package>
         if ("package".equals(child.getName())) {
           String mapperPackage = child.getStringAttribute("name");
           configuration.addMappers(mapperPackage);

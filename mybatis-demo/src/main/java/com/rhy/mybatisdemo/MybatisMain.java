@@ -15,7 +15,13 @@ import java.io.Reader;
  * @description:
  */
 public class MybatisMain {
-    public static void main(String[] args) {
-
+    public static void main(String[] args) throws IOException {
+        String mybatisConfig = "mybatis-config.xml";
+        //将XML配置读取成Reader流
+        Reader reader = Resources.getResourceAsReader(mybatisConfig);
+        /**
+         * 加载读取配置文件，并构建一个{@link SqlSessionFactory}
+         */
+        SqlSessionFactory build = new SqlSessionFactoryBuilder().build(reader);
     }
 }

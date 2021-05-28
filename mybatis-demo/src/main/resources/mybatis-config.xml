@@ -3,25 +3,27 @@
         "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
     <!--properties 扫描属性文件.properties  -->
-    <properties resource="db.properties"></properties>
+    <properties resource="db.properties">
+        <property name="test" value="123"/>
+    </properties>
 
     <settings>
 <!--        <setting name="cacheEnabled" value="true"/>-->
-        <!--<setting name="lazyLoadingEnabled" value="true"/>-->
-        <!--<setting name="multipleResultSetsEnabled" value="true"/>-->
-        <!--<setting name="useColumnLabel" value="true"/>-->
-        <!--<setting name="useGeneratedKeys" value="false"/>-->
-        <!--<setting name="autoMappingBehavior" value="PARTIAL"/>-->
-        <!--<setting name="autoMappingUnknownColumnBehavior" value="WARNING"/>-->
-        <!--<setting name="defaultExecutorType" value="SIMPLE"/>-->
-        <!--<setting name="defaultStatementTimeout" value="25"/>-->
-        <!--<setting name="defaultFetchSize" value="100"/>-->
-        <!--<setting name="safeRowBoundsEnabled" value="false"/>-->
+<!--        <setting name="lazyLoadingEnabled" value="true"/>-->
+<!--        <setting name="multipleResultSetsEnabled" value="true"/>-->
+<!--        <setting name="useColumnLabel" value="true"/>-->
+<!--        <setting name="useGeneratedKeys" value="false"/>-->
+<!--        <setting name="autoMappingBehavior" value="PARTIAL"/>-->
+<!--        <setting name="autoMappingUnknownColumnBehavior" value="WARNING"/>-->
+<!--        <setting name="defaultExecutorType" value="SIMPLE"/>-->
+<!--        <setting name="defaultStatementTimeout" value="25"/>-->
+<!--        <setting name="defaultFetchSize" value="100"/>-->
+<!--        <setting name="safeRowBoundsEnabled" value="false"/>-->
         <setting name="mapUnderscoreToCamelCase" value="true"/>
-        <!--<setting name="localCacheScope" value="STATEMENT"/>-->
-        <!--<setting name="jdbcTypeForNull" value="OTHER"/>-->
-        <!--<setting name="lazyLoadTriggerMethods" value="equals,clone,hashCode,toString"/>-->
-        <!--<setting name="logImpl" value="STDOUT_LOGGING" />-->
+<!--        <setting name="localCacheScope" value="STATEMENT"/>-->
+<!--        <setting name="jdbcTypeForNull" value="OTHER"/>-->
+<!--        <setting name="lazyLoadTriggerMethods" value="equals,clone,hashCode,toString"/>-->
+<!--        <setting name="logImpl" value="STDOUT_LOGGING" />-->
     </settings>
    <!-- <plugins>
         <plugin interceptor="com.tuling.plugins.ExamplePlugin" ></plugin>
@@ -42,8 +44,11 @@
 
 
     <mappers>
-<!--        <package name="classpath:/mapper/*.xml"/>-->
-        <mapper resource="classpath:/mapper/*.xml"/>
+        <package name="mapper"/>
+<!--        <mapper resource="mapper/UserMapper.xml"/>-->
+<!--        <mapper url="D:/mapper/UserMapper.xml"/>-->
+        <!-- 要求接口和mapper在同一包下 -->
+<!--        <mapper class="com.rhy.mybatisdemo.mapper.UserMapper"/>-->
     </mappers>
 </configuration>
 
