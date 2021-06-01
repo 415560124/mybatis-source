@@ -112,18 +112,26 @@ public class MapperAnnotationBuilder {
     this.type = type;
   }
 
+  /**
+   * 解析mapper接口，以及mapper.xml文件
+   */
   public void parse() {
     String resource = type.toString();
+    //是否已经解析mapper接口对应xml
     if (!configuration.isResourceLoaded(resource)) {
+      //根据mapper接口名获取xml文件并解析
       loadXmlResource();
+      //添加已解析标记
       configuration.addLoadedResource(resource);
       assistant.setCurrentNamespace(type.getName());
       parseCache();
       parseCacheRef();
+      //循环所有方法，检查是否使用了注解
       for (Method method : type.getMethods()) {
         if (!canHaveStatement(method)) {
           continue;
         }
+        //如果使用了注解，会解析为MappedStatement
         if (getAnnotationWrapper(method, false, Select.class, SelectProvider.class).isPresent()
             && method.getAnnotation(ResultMap.class) == null) {
           parseResultMap(method);
@@ -162,13 +170,16 @@ public class MapperAnnotationBuilder {
     // Spring may not know the real resource name so we check a flag
     // to prevent loading again a resource twice
     // this flag is set at XMLMapperBuilder#bindMapperForNamespace
+    //检查是否已经加载过此xml
     if (!configuration.isResourceLoaded("namespace:" + type.getName())) {
+      //把类包名 转为资源路径
       String xmlResource = type.getName().replace('.', '/') + ".xml";
-      // #1347
+      // 获得resource资源流
       InputStream inputStream = type.getResourceAsStream("/" + xmlResource);
       if (inputStream == null) {
         // Search XML mapper that is not in the module but in the classpath.
         try {
+          //加载xml流
           inputStream = Resources.getResourceAsStream(type.getClassLoader(), xmlResource);
         } catch (IOException e2) {
           // ignore, resource is not required
@@ -176,6 +187,7 @@ public class MapperAnnotationBuilder {
       }
       if (inputStream != null) {
         XMLMapperBuilder xmlParser = new XMLMapperBuilder(inputStream, assistant.getConfiguration(), xmlResource, configuration.getSqlFragments(), type.getName());
+        //解析mapper.xml
         xmlParser.parse();
       }
     }

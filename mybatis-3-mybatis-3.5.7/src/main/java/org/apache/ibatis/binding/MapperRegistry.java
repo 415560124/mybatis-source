@@ -57,18 +57,32 @@ public class MapperRegistry {
     return knownMappers.containsKey(type);
   }
 
+  /**
+   * 解析Class的Mapper文件
+   * 将MapperClass保存到{@link #knownMappers}中
+   * @param type
+   * @param <T>
+   */
   public <T> void addMapper(Class<T> type) {
+    //判断传入的是否为接口
     if (type.isInterface()) {
+      /**
+       * 判断缓存中是否存在该类型
+       */
       if (hasMapper(type)) {
         throw new BindingException("Type " + type + " is already known to the MapperRegistry.");
       }
       boolean loadCompleted = false;
       try {
+        /**
+         * 创建一个Mapper代理工厂类，把mapper接口保存进去
+         */
         knownMappers.put(type, new MapperProxyFactory<>(type));
         // It's important that the type is added before the parser is run
         // otherwise the binding may automatically be attempted by the
         // mapper parser. If the type is already known, it won't try.
         MapperAnnotationBuilder parser = new MapperAnnotationBuilder(config, type);
+        //执行解析
         parser.parse();
         loadCompleted = true;
       } finally {
@@ -101,7 +115,9 @@ public class MapperRegistry {
   public void addMappers(String packageName, Class<?> superType) {
     ResolverUtil<Class<?>> resolverUtil = new ResolverUtil<>();
     resolverUtil.find(new ResolverUtil.IsA(superType), packageName);
+    //解析出资源目录下所有的类
     Set<Class<? extends Class<?>>> mapperSet = resolverUtil.getClasses();
+    //循环解析mapper接口
     for (Class<?> mapperClass : mapperSet) {
       addMapper(mapperClass);
     }

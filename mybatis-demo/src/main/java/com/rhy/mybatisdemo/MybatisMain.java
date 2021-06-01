@@ -1,5 +1,7 @@
 package com.rhy.mybatisdemo;
 
+import com.rhy.mybatisdemo.entity.User;
+import com.rhy.mybatisdemo.mapper.UserMapper;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -22,6 +24,18 @@ public class MybatisMain {
         /**
          * 加载读取配置文件，并构建一个{@link SqlSessionFactory}
          */
-        SqlSessionFactory build = new SqlSessionFactoryBuilder().build(reader);
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);
+        /**
+         * 加载数据源执行器{@link DefaultSqlSession}
+         */
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        //第一种
+        User user = sqlSession.selectOne("com.rhy.mybatisdemo.mapper.UserMapper.selectById", 1L);
+        //第二种获取mapper文件映射执行
+//        UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+//        User user = mapper.selectById(1L);
+        System.out.println(user);
+        sqlSession.commit();
+        sqlSession.close();
     }
 }

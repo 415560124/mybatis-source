@@ -11,7 +11,7 @@
  Target Server Version : 50730
  File Encoding         : 65001
 
- Date: 27/05/2021 16:48:35
+ Date: 01/06/2021 17:14:04
 */
 
 SET NAMES utf8mb4;
@@ -30,6 +30,21 @@ CREATE TABLE `user`  (
 
 -- ----------------------------
 -- Records of user
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for user_card
+-- ----------------------------
+DROP TABLE IF EXISTS `user_card`;
+CREATE TABLE `user_card`  (
+  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `card_id` bigint(20) UNSIGNED NOT NULL,
+  `card_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`user_id`, `card_id`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of user_card
 -- ----------------------------
 
 SET FOREIGN_KEY_CHECKS = 1;

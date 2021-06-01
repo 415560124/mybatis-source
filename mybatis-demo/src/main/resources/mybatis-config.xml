@@ -40,11 +40,14 @@
             </dataSource>
         </environment>
     </environments>
-
+    <databaseIdProvider type="DB_VENDOR">
+        <property name="MySQL" value="mysql"/>
+        <property name="Oracle" value="oracle"/>
+    </databaseIdProvider>
 
 
     <mappers>
-        <package name="mapper"/>
+        <package name="com.rhy.mybatisdemo.mapper"/>
 <!--        <mapper resource="mapper/UserMapper.xml"/>-->
 <!--        <mapper url="D:/mapper/UserMapper.xml"/>-->
         <!-- 要求接口和mapper在同一包下 -->

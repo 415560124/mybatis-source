@@ -834,6 +834,7 @@ public class Configuration {
   }
 
   public void addMappers(String packageName) {
+    //注册mappers
     mapperRegistry.addMappers(packageName);
   }
 

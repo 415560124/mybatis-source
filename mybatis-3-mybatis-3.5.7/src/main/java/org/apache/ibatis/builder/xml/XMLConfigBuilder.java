@@ -17,6 +17,8 @@ package org.apache.ibatis.builder.xml;
 
 import java.io.InputStream;
 import java.io.Reader;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -103,6 +105,10 @@ public class XMLConfigBuilder extends BaseBuilder {
     return configuration;
   }
 
+  /**
+   * 解析<configuration></configuration>节点信息
+   * @param root
+   */
   private void parseConfiguration(XNode root) {
     try {
       /**
@@ -180,6 +186,7 @@ public class XMLConfigBuilder extends BaseBuilder {
        *       <property name="Oracle" value="oracle" />
        *       <property name="MySql" value="mysql" />
        *     </databaseIdProvider>
+       * 根据数据库驱动类型，获取到数据库名{@link Connection#getMetaData()}{@link DatabaseMetaData#getDatabaseProductName()}
        * 解析到{@link Configuration#databaseId}
        */
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
@@ -261,6 +268,9 @@ public class XMLConfigBuilder extends BaseBuilder {
              * 注册到{@link org.apache.ibatis.type.TypeAliasRegistry#typeAliases}中
              */
             if (alias == null) {
+              /**
+               * 默认的别名{@link Class#getSimpleName()}
+               */
               typeAliasRegistry.registerAlias(clazz);
             } else {
               typeAliasRegistry.registerAlias(alias, clazz);
@@ -467,36 +477,70 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * 解析
+   * <configuration>
+   *   <mapper></mapper>
+   * </configuration>
+   * mapper节点
+   * @param parent
+   * @throws Exception
+   */
   private void mapperElement(XNode parent) throws Exception {
     if (parent != null) {
       /**
        * 获取所有子节点
        */
       for (XNode child : parent.getChildren()) {
-        //节点为<package name="com.rhy.mapper"></package>
+        /**
+         * 判断mapper是不是包路径，批量注册
+         * <package name="mapper"/>
+         */
         if ("package".equals(child.getName())) {
           String mapperPackage = child.getStringAttribute("name");
           configuration.addMappers(mapperPackage);
         } else {
+          /**
+           * 判断属性是否为resource
+           * <mapper resource="mapper/UserMapper.xml"/>
+           */
           String resource = child.getStringAttribute("resource");
+
+          /**
+           * 判断属性是否为url
+           * <mapper url="D:/mapper/UserMapper.xml"/>
+           */
           String url = child.getStringAttribute("url");
+          /**
+           * 判断属性是否为class
+           * <mapper class="com.rhy.mybatisdemo.mapper.UserMapper"/>
+           */
           String mapperClass = child.getStringAttribute("class");
+          //只配置了resource的方式
           if (resource != null && url == null && mapperClass == null) {
             ErrorContext.instance().resource(resource);
+            //将文件读取为流
             try(InputStream inputStream = Resources.getResourceAsStream(resource)) {
+              /**
+               * 创建{@link XMLMapperBuilder}用来读取解析mapper.xml文件
+               */
               XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource, configuration.getSqlFragments());
+              //解析mapper.xml文件
               mapperParser.parse();
             }
           } else if (resource == null && url != null && mapperClass == null) {
+            //只配置了url方式
             ErrorContext.instance().resource(url);
             try(InputStream inputStream = Resources.getUrlAsStream(url)){
               XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, url, configuration.getSqlFragments());
               mapperParser.parse();
             }
           } else if (resource == null && url == null && mapperClass != null) {
+            //只配置了class方式
             Class<?> mapperInterface = Resources.classForName(mapperClass);
             configuration.addMapper(mapperInterface);
           } else {
+            //一个节点下只能配置一种加载方式
             throw new BuilderException("A mapper element may only specify a url, resource or class, but not more than one.");
           }
         }
