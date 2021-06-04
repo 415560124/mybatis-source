@@ -162,11 +162,12 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private void buildStatementFromContext(List<XNode> list) {
+    //解析增删改查SQL语句节点
     if (configuration.getDatabaseId() != null) {
-      //获取数据库ID
+      //获取数据库ID，匹配一次
       buildStatementFromContext(list, configuration.getDatabaseId());
     }
-    //解析增删改查SQL语句节点
+    //传入null匹配一次，查找未配置数据库ID的sql
     buildStatementFromContext(list, null);
   }
 

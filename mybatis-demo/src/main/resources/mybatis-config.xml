@@ -47,8 +47,8 @@
 
 
     <mappers>
-        <package name="com.rhy.mybatisdemo.mapper"/>
-<!--        <mapper resource="mapper/UserMapper.xml"/>-->
+<!--        <package name="com.rhy.mybatisdemo.mapper"/>-->
+        <mapper resource="com/rhy/mybatisdemo/mapper/UserMapper.xml"/>
 <!--        <mapper url="D:/mapper/UserMapper.xml"/>-->
         <!-- 要求接口和mapper在同一包下 -->
 <!--        <mapper class="com.rhy.mybatisdemo.mapper.UserMapper"/>-->
