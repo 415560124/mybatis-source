@@ -664,10 +664,19 @@ public class Configuration {
     return newExecutor(transaction, defaultExecutorType);
   }
 
+  /**
+   * 根据类型创建执行器
+   * @param transaction
+   * @param executorType
+   * @return
+   */
   public Executor newExecutor(Transaction transaction, ExecutorType executorType) {
     executorType = executorType == null ? defaultExecutorType : executorType;
     executorType = executorType == null ? ExecutorType.SIMPLE : executorType;
     Executor executor;
+    /**
+     * 按执行器的类型创建不同的执行器
+     */
     if (ExecutorType.BATCH == executorType) {
       executor = new BatchExecutor(this, transaction);
     } else if (ExecutorType.REUSE == executorType) {
@@ -675,9 +684,15 @@ public class Configuration {
     } else {
       executor = new SimpleExecutor(this, transaction);
     }
+    /**
+     * 如果配置了二级缓存，则用'装饰器设计模式'装饰二级缓存
+     */
     if (cacheEnabled) {
       executor = new CachingExecutor(executor);
     }
+    /**
+     * 调用所有拦截器的plugin方法，给执行器进行增强
+     */
     executor = (Executor) interceptorChain.pluginAll(executor);
     return executor;
   }

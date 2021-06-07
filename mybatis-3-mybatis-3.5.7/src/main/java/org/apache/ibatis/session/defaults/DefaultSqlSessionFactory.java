@@ -42,8 +42,17 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
     this.configuration = configuration;
   }
 
+  /**
+   * 创建SqlSession
+   * @return
+   */
   @Override
   public SqlSession openSession() {
+    /**
+     * 1.获取数据库连接对象
+     * 2.创建执行器 Executor
+     * 3.返回包装了 Executor和Configuration的{@link DefaultSqlSession}对象
+     */
     return openSessionFromDataSource(configuration.getDefaultExecutorType(), null, false);
   }
 
@@ -90,10 +99,32 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
   private SqlSession openSessionFromDataSource(ExecutorType execType, TransactionIsolationLevel level, boolean autoCommit) {
     Transaction tx = null;
     try {
+      /**
+       * 获取环境变量
+       */
       final Environment environment = configuration.getEnvironment();
+      /**
+       * 获取事务工厂，用于创建事务
+       */
       final TransactionFactory transactionFactory = getTransactionFactoryFromEnvironment(environment);
+      /**
+       * 创建事务对象
+       */
       tx = transactionFactory.newTransaction(environment.getDataSource(), level, autoCommit);
-      final Executor executor = configuration.newExecutor(tx, execType);
+      /**
+       * 创建{@link Executor}执行器对象
+       * 三种执行器：
+       * ① {@link SimpleExecutor} 默认执行器
+       * ② {@link ReuseExecutor} 不用重复解析的执行器
+       * ③ {@link BatchExecutor} 批量执行器
+       * 其他：
+       * ① {@link BaseExecutor} 一级缓存实现执行器
+       * ② {@link CachingExecutor} 二级缓存实现执行器
+       */
+      final Executor executor = configuration. newExecutor(tx, execType);
+      /**
+       * 返回默认的SqlSession实现类{@link DefaultSqlSession}
+       */
       return new DefaultSqlSession(configuration, executor, autoCommit);
     } catch (Exception e) {
       closeTransaction(tx); // may have fetched a connection so lets call close()
@@ -126,9 +157,14 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
   }
 
   private TransactionFactory getTransactionFactoryFromEnvironment(Environment environment) {
+    /**
+     * 如果环境变量为空 || 环境变量中的事务工厂为空
+     */
     if (environment == null || environment.getTransactionFactory() == null) {
+      //返回默认的
       return new ManagedTransactionFactory();
     }
+    //返回环境变量中配置的
     return environment.getTransactionFactory();
   }
 
