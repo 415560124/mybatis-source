@@ -691,7 +691,7 @@ public class Configuration {
       executor = new CachingExecutor(executor);
     }
     /**
-     * 调用所有拦截器的plugin方法，给执行器进行增强
+     * TODO 调用所有拦截器的plugin方法，给执行器进行增强
      */
     executor = (Executor) interceptorChain.pluginAll(executor);
     return executor;
