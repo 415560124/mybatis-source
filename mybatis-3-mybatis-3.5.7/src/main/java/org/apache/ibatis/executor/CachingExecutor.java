@@ -33,6 +33,8 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.transaction.Transaction;
 
 /**
+ * 二级缓存实现类
+ * 二级缓存是针对Application的缓存，可以提高查询性能。所有查询都使用一个{@link Cache}缓存实现类处理查询缓存
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
@@ -84,28 +86,56 @@ public class CachingExecutor implements Executor {
 
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
+    //解析Sql语句
     BoundSql boundSql = ms.getBoundSql(parameterObject);
+    /**
+     * 创建缓存Key
+     * {rowBounds参数}:{MappedStatement#id}:{参数}:{Sql语句}
+     */
     CacheKey key = createCacheKey(ms, parameterObject, rowBounds, boundSql);
+    //判断是否需要缓存，先从缓存中取，不存在则去数据库查询
     return query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
   }
 
+  /**
+   * 判断是否需要缓存，先从缓存中取，不存在则去数据库查询
+   * @param ms Mapper映射元素
+   * @param parameterObject 参数对象
+   * @param rowBounds 逻辑分页参数
+   * @param resultHandler 返回实现类
+   * @param key 缓存Key
+   * @param boundSql 解析的Sql对象
+   * @param <E>
+   * @return
+   * @throws SQLException
+   */
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)
       throws SQLException {
+    /**
+     * 获得缓存实现类，如果mapper中配置了<cache></cache>
+     * 则读取配置文件就会新建{@link Configuration#caches}
+     */
     Cache cache = ms.getCache();
     if (cache != null) {
+      //判断是否需要刷新缓存
       flushCacheIfRequired(ms);
       if (ms.isUseCache() && resultHandler == null) {
         ensureNoOutParams(ms, boundSql);
+        //先去二级缓存中获取
         @SuppressWarnings("unchecked")
         List<E> list = (List<E>) tcm.getObject(cache, key);
+        //二级缓存中没有
         if (list == null) {
+          //去数据库里查
           list = delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
+          //加入到二级缓存中
           tcm.putObject(cache, key, list); // issue #578 and #116
         }
         return list;
       }
     }
+    //直接去数据库里查
     return delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
   }
 

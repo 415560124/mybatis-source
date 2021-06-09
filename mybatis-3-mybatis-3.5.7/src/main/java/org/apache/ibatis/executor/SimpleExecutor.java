@@ -16,6 +16,7 @@
 package org.apache.ibatis.executor;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
@@ -53,13 +54,42 @@ public class SimpleExecutor extends BaseExecutor {
     }
   }
 
+  /**
+   * 创建
+   * ①{@link StatementHandler} SQL语句处理器
+   * ②{@link org.apache.ibatis.executor.parameter.ParameterHandler} 参数处理器
+   * ③{@link org.apache.ibatis.executor.resultset.ResultSetHandler} 返回集处理器
+   * @param ms
+   * @param parameter
+   * @param rowBounds
+   * @param resultHandler
+   * @param boundSql
+   * @param <E>
+   * @return
+   * @throws SQLException
+   */
   @Override
   public <E> List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
     Statement stmt = null;
     try {
       Configuration configuration = ms.getConfiguration();
+      /**
+       * 创建{@link StatementHandler} SQL语句处理器
+       * 在里面还会创建两个核心对象
+       * {@link org.apache.ibatis.executor.parameter.ParameterHandler} 参数处理器
+       * {@link org.apache.ibatis.executor.resultset.ResultSetHandler} 返回集处理器
+       */
       StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
+      /**
+       * ①获取数据库连接
+       * ②创建数据库{@link Statement}
+       * ③调用{@link org.apache.ibatis.executor.parameter.ParameterHandler} 参数处理器
+       */
       stmt = prepareStatement(handler, ms.getStatementLog());
+      /**
+       * 执行SQL，并组装返回结果集
+       * 调用{@link org.apache.ibatis.executor.resultset.ResultSetHandler} 返回集处理器
+       */
       return handler.query(stmt, resultHandler);
     } finally {
       closeStatement(stmt);
@@ -83,8 +113,15 @@ public class SimpleExecutor extends BaseExecutor {
 
   private Statement prepareStatement(StatementHandler handler, Log statementLog) throws SQLException {
     Statement stmt;
+    //获取数据库连接
     Connection connection = getConnection(statementLog);
+    /**
+     * 创建JDBC的{@link Statement}
+     */
     stmt = handler.prepare(connection, transaction.getTimeout());
+    /**
+     * 执行参数处理器{@link org.apache.ibatis.executor.parameter.ParameterHandler#setParameters(PreparedStatement)}
+     */
     handler.parameterize(stmt);
     return stmt;
   }

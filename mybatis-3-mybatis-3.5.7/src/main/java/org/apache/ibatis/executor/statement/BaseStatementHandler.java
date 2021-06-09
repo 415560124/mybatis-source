@@ -65,7 +65,10 @@ public abstract class BaseStatementHandler implements StatementHandler {
     }
 
     this.boundSql = boundSql;
-
+    /**
+     * {@link org.apache.ibatis.executor.parameter.ParameterHandler} 参数处理器
+     * {@link org.apache.ibatis.executor.resultset.ResultSetHandler} 返回集处理器
+     */
     this.parameterHandler = configuration.newParameterHandler(mappedStatement, parameterObject, boundSql);
     this.resultSetHandler = configuration.newResultSetHandler(executor, mappedStatement, rowBounds, parameterHandler, resultHandler, boundSql);
   }

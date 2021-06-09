@@ -181,23 +181,29 @@ public class DefaultResultSetHandler implements ResultSetHandler {
   @Override
   public List<Object> handleResultSets(Statement stmt) throws SQLException {
     ErrorContext.instance().activity("handling results").object(mappedStatement.getId());
-
+    //返回结果集
     final List<Object> multipleResults = new ArrayList<>();
 
     int resultSetCount = 0;
+    /**
+     * 获得{@link ResultSet}，包装为{@link ResultSetWrapper}
+     */
     ResultSetWrapper rsw = getFirstResultSet(stmt);
-
+    /**
+     * 获得Mapper中的ResultMap集合
+     */
     List<ResultMap> resultMaps = mappedStatement.getResultMaps();
     int resultMapCount = resultMaps.size();
     validateResultMapsCount(rsw, resultMapCount);
     while (rsw != null && resultMapCount > resultSetCount) {
       ResultMap resultMap = resultMaps.get(resultSetCount);
+      //拼接返回值，multipleResults即返回结果集
       handleResultSet(rsw, resultMap, multipleResults, null);
       rsw = getNextResultSet(stmt);
       cleanUpAfterHandlingResultSet();
       resultSetCount++;
     }
-
+    //存储过程会有多个结果集
     String[] resultSets = mappedStatement.getResultSets();
     if (resultSets != null) {
       while (rsw != null && resultSetCount < resultSets.length) {
@@ -240,6 +246,7 @@ public class DefaultResultSetHandler implements ResultSetHandler {
       // move forward to get the first resultset in case the driver
       // doesn't return the resultset as the first result (HSQLDB 2.1)
       if (stmt.getMoreResults()) {
+        //获得返回集对象{@link ResultSet}
         rs = stmt.getResultSet();
       } else {
         if (stmt.getUpdateCount() == -1) {
@@ -248,6 +255,9 @@ public class DefaultResultSetHandler implements ResultSetHandler {
         }
       }
     }
+    /**
+     * 将{@link ResultSet}包装为{@link ResultSetWrapper}
+     */
     return rs != null ? new ResultSetWrapper(rs, configuration) : null;
   }
 

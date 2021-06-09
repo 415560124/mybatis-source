@@ -28,6 +28,7 @@ public class LongTypeHandler extends BaseTypeHandler<Long> {
   @Override
   public void setNonNullParameter(PreparedStatement ps, int i, Long parameter, JdbcType jdbcType)
       throws SQLException {
+    //设置Long值
     ps.setLong(i, parameter);
   }
 

@@ -45,6 +45,8 @@ import org.apache.ibatis.transaction.Transaction;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
 /**
+ * 一级缓存实现类
+ * 一级缓存是针对于SqlSession的缓存，使用同一个SqlSession对象调用Mapper方法只会执行一次Sql
  * @author Clinton Begin
  */
 public abstract class BaseExecutor implements Executor {
@@ -141,19 +143,24 @@ public abstract class BaseExecutor implements Executor {
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
     ErrorContext.instance().resource(ms.getResource()).activity("executing a query").object(ms.getId());
+    //已经关闭执行器，则抛出异常
     if (closed) {
       throw new ExecutorException("Executor was closed.");
     }
     if (queryStack == 0 && ms.isFlushCacheRequired()) {
+      //清空本地缓存
       clearLocalCache();
     }
     List<E> list;
     try {
       queryStack++;
+      //从一级缓存中查
       list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
       if (list != null) {
+        //缓存中存在
         handleLocallyCachedOutputParameters(ms, key, parameter, boundSql);
       } else {
+        //缓存中不存在从数据库里查
         list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, key, boundSql);
       }
     } finally {
@@ -170,6 +177,7 @@ public abstract class BaseExecutor implements Executor {
         clearLocalCache();
       }
     }
+    //返回查询数据
     return list;
   }
 
@@ -321,8 +329,10 @@ public abstract class BaseExecutor implements Executor {
 
   private <E> List<E> queryFromDatabase(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
     List<E> list;
+    //往缓存中放一个占位
     localCache.putObject(key, EXECUTION_PLACEHOLDER);
     try {
+      //执行查询
       list = doQuery(ms, parameter, rowBounds, resultHandler, boundSql);
     } finally {
       localCache.removeObject(key);
