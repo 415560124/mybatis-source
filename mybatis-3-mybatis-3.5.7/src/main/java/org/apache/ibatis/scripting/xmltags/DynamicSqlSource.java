@@ -19,8 +19,10 @@ import org.apache.ibatis.builder.SqlSourceBuilder;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.builder.StaticSqlSource;
 
 /**
+ * 动态SQL解析
  * @author Clinton Begin
  */
 public class DynamicSqlSource implements SqlSource {
@@ -33,15 +35,32 @@ public class DynamicSqlSource implements SqlSource {
     this.rootSqlNode = rootSqlNode;
   }
 
+  /**
+   * 动态sql需要解析，rootSqlNode属性下的所有{@link SqlNode}，调用{@link SqlNode#apply(DynamicContext)}方法
+   * @param parameterObject
+   * @return
+   */
   @Override
   public BoundSql getBoundSql(Object parameterObject) {
+    /**
+     * 封装为动态SQL上下文
+     * {@link DynamicContext#bindings}参数
+     * {@link DynamicContext#sqlBuilder}拼接的SQL语句
+     */
     DynamicContext context = new DynamicContext(configuration, parameterObject);
+    //拼接SQL，会替换${}，但不会替换#{}
     rootSqlNode.apply(context);
     SqlSourceBuilder sqlSourceParser = new SqlSourceBuilder(configuration);
     Class<?> parameterType = parameterObject == null ? Object.class : parameterObject.getClass();
+    /**
+     * 解析'#{}'并替换为'?'
+     * 并包装参数到{@link StaticSqlSource#parameterMappings}
+     * 重新包装为SqlSource为{@link StaticSqlSource}
+     */
     SqlSource sqlSource = sqlSourceParser.parse(context.getSql(), parameterType, context.getBindings());
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
     context.getBindings().forEach(boundSql::setAdditionalParameter);
+    //返回BoundSql对象
     return boundSql;
   }
 

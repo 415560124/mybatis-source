@@ -30,20 +30,30 @@ public class GenericTokenParser {
     this.handler = handler;
   }
 
+  /**
+   * 替换${}参数，并返回组装的SQL语句
+   * @param text
+   * @return
+   */
   public String parse(String text) {
+    //传入的文本为空，则返回空串
     if (text == null || text.isEmpty()) {
       return "";
     }
-    // search open token
+    // 查找'${'下标
     int start = text.indexOf(openToken);
     if (start == -1) {
+      //没找到直接返回原串
       return text;
     }
+    //转成char数组
     char[] src = text.toCharArray();
     int offset = 0;
     final StringBuilder builder = new StringBuilder();
     StringBuilder expression = null;
+    //开始循环替换${}
     do {
+      //如果$前一个是'\'
       if (start > 0 && src[start - 1] == '\\') {
         // this open token is escaped. remove the backslash and continue.
         builder.append(src, offset, start - offset - 1).append(openToken);

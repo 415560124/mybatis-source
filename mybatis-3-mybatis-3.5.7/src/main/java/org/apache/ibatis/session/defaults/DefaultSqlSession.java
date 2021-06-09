@@ -70,13 +70,22 @@ public class DefaultSqlSession implements SqlSession {
     return this.selectOne(statement, null);
   }
 
+  /**
+   * 调用selectList取查询结果的第一条
+   * @param statement 用于匹配mappedStatements中的唯一key
+   * @param parameter 要传递给语句的参数对象
+   * @param <T>
+   * @return
+   */
   @Override
   public <T> T selectOne(String statement, Object parameter) {
-    // Popular vote was to return null on 0 results and throw exception on too many.
+    //调用selectList然后取第一条就是selectOne的结果
     List<T> list = this.selectList(statement, parameter);
     if (list.size() == 1) {
+      //取第一条
       return list.get(0);
     } else if (list.size() > 1) {
+      //如果查询数据大于一条则抛出异常
       throw new TooManyResultsException("Expected one result (or null) to be returned by selectOne(), but found: " + list.size());
     } else {
       return null;
@@ -135,19 +144,49 @@ public class DefaultSqlSession implements SqlSession {
     return this.selectList(statement, null);
   }
 
+  /**
+   * 查询方法
+   * @param statement 用于匹配mappedStatements中的唯一key
+   * @param parameter 要传递给语句的参数对象
+   * @param <E>
+   * @return
+   */
   @Override
   public <E> List<E> selectList(String statement, Object parameter) {
     return this.selectList(statement, parameter, RowBounds.DEFAULT);
   }
 
+  /**
+   * 分页查询
+   * @param statement 用于匹配mappedStatements中的唯一key
+   * @param parameter 要传递给语句的参数对象
+   * @param rowBounds mybatis的逻辑分页参数
+   * @param <E>
+   * @return
+   */
   @Override
   public <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
     return selectList(statement, parameter, rowBounds, Executor.NO_RESULT_HANDLER);
   }
 
+  /**
+   * 分页查询
+   * @param statement 用于匹配mappedStatements中的唯一key
+   * @param parameter 要传递给语句的参数对象
+   * @param rowBounds mybatis的逻辑分页参数
+   * @param handler
+   * @param <E>
+   * @return
+   */
   private <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds, ResultHandler handler) {
     try {
+      /**
+       * 通过statement key获取{@link MappedStatement}
+       */
       MappedStatement ms = configuration.getMappedStatement(statement);
+      /**
+       * 通知执行器去执行{@link MappedStatement}对象
+       */
       return executor.query(ms, wrapCollection(parameter), rowBounds, handler);
     } catch (Exception e) {
       throw ExceptionFactory.wrapException("Error querying database.  Cause: " + e, e);
@@ -314,6 +353,11 @@ public class DefaultSqlSession implements SqlSession {
   }
 
   private Object wrapCollection(final Object object) {
+    /**
+     * 给参数起别名
+     * List => list
+     * Array => array
+     */
     return ParamNameResolver.wrapToMapIfCollection(object, null);
   }
 

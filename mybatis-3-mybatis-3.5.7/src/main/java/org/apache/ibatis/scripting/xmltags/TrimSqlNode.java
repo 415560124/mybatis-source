@@ -25,6 +25,7 @@ import java.util.StringTokenizer;
 import org.apache.ibatis.session.Configuration;
 
 /**
+ * 修正替换的SqlNode，where也是继承了这个SqlNode
  * @author Clinton Begin
  */
 public class TrimSqlNode implements SqlNode {
@@ -49,10 +50,25 @@ public class TrimSqlNode implements SqlNode {
     this.configuration = configuration;
   }
 
+  /**
+   * 继续递归解析{@link MixedSqlNode}
+   * 添加Where前缀，并替换 and|or
+   * 将主Sql和子节点Sql拼接
+   * @param context
+   * @return
+   */
   @Override
   public boolean apply(DynamicContext context) {
+    //创建一个过滤动态SQL上下文，因为需要将子SqlNode都组装完毕后再开始和主Sql合并
     FilteredDynamicContext filteredDynamicContext = new FilteredDynamicContext(context);
+    /**
+     * 继续递归解析{@link MixedSqlNode}
+     */
     boolean result = contents.apply(filteredDynamicContext);
+    /**
+     * ①替换前缀和后缀
+     * ②将子节点Sql和主节点Sql进行拼接
+     */
     filteredDynamicContext.applyAll();
     return result;
   }

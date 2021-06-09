@@ -18,6 +18,7 @@ package org.apache.ibatis.scripting.xmltags;
 import java.util.List;
 
 /**
+ * 混合SqlNode，存储了多个其他SqlNode
  * @author Clinton Begin
  */
 public class MixedSqlNode implements SqlNode {
@@ -27,9 +28,18 @@ public class MixedSqlNode implements SqlNode {
     this.contents = contents;
   }
 
+  /**
+   * 循环所有SqlNode节点，调用{@link SqlNode#apply(DynamicContext)}
+   * @param context
+   * @return
+   */
   @Override
   public boolean apply(DynamicContext context) {
-    contents.forEach(node -> node.apply(context));
+    //循环所有SqlNode节点，调用{@link SqlNode#apply(DynamicContext)}
+    contents.forEach(
+      node -> {
+        node.apply(context);
+    });
     return true;
   }
 }

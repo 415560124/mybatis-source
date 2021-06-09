@@ -16,7 +16,7 @@
 
 
     <select id="selectById"  resultMap="result" ><!-- databaseId="mysql" -->
-        select id,user_name,create_time from user where id=${param1}
+        select id,user_name,create_time from user where id=#{id}<!-- ${id} -->
         <where>
             <if test="param1>1">
                AND id=#{param1}

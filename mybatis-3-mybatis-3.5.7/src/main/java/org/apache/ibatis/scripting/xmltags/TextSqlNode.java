@@ -47,7 +47,13 @@ public class TextSqlNode implements SqlNode {
 
   @Override
   public boolean apply(DynamicContext context) {
+    //'${}'解析器
     GenericTokenParser parser = createParser(new BindingTokenParser(context, injectionFilter));
+    /**
+     * ①解析传入的SQL文本
+     * ②替换${}
+     * ③追加到context中
+     */
     context.appendSql(parser.parse(text));
     return true;
   }
@@ -66,8 +72,14 @@ public class TextSqlNode implements SqlNode {
       this.injectionFilter = injectionFilter;
     }
 
+    /**
+     * 通过content参数名从{@link DynamicContext}上下文中取参数值
+     * @param content 参数名
+     * @return
+     */
     @Override
     public String handleToken(String content) {
+      //从上下文中获取"_parameter"参数值
       Object parameter = context.getBindings().get("_parameter");
       if (parameter == null) {
         context.getBindings().put("value", null);

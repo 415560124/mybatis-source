@@ -301,7 +301,13 @@ public final class MappedStatement {
     return resultSets;
   }
 
+  /**
+   * 解析SQL，并包装为{@link BoundSql}
+   * @param parameterObject sql入参
+   * @return
+   */
   public BoundSql getBoundSql(Object parameterObject) {
+    //解析SQL语句
     BoundSql boundSql = sqlSource.getBoundSql(parameterObject);
     List<ParameterMapping> parameterMappings = boundSql.getParameterMappings();
     if (parameterMappings == null || parameterMappings.isEmpty()) {

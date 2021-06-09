@@ -50,7 +50,9 @@ public class DynamicContext {
     } else {
       bindings = new ContextMap(null, false);
     }
+    //绑定参数'_parameter'作为key，入参作为value
     bindings.put(PARAMETER_OBJECT_KEY, parameterObject);
+    //绑定参数'_databaseId'作为key，{@link Configuration#getDatabaseId()}作为value
     bindings.put(DATABASE_ID_KEY, configuration.getDatabaseId());
   }
 
