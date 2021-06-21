@@ -9,7 +9,6 @@ class MybatisDemoApplicationTests {
     @Test
     void contextLoads() {
         System.out.println(777);
-        System.out.println(888);
     }
 
     @Test
